@@ -5,7 +5,7 @@ oc apply -f - <<EOF
 kind: CronJob
 apiVersion: batch/v1
 metadata:
-  name: traffic-export-superknowa
+  name: traffic-export-llm-judge
 spec:
   schedule: 0 0 */14 * *
   concurrencyPolicy: Allow
@@ -64,16 +64,16 @@ spec:
                       key: TRAFFIC_ACTION_TOKEN
               imagePullPolicy: IfNotPresent
               volumeMounts:
-                - name: superknowa-ca-certificate
+                - name: mongodb-cert-secret
                   readOnly: true
                   mountPath: /app/backend/cert
               terminationMessagePolicy: File
               image: image-registry.openshift-image-registry.svc:5000/llm-judge/traffic_retention_judgeit:11102024-v1
           serviceAccount: judgeit-traffic-app-sa
           volumes:
-            - name: superknowa-ca-certificate
+            - name: mongodb-cert-secret
               secret:
-                secretName: superknowa-ca-certificate
+                secretName: mongodb-cert-secret
                 defaultMode: 420
 EOF
 ```
