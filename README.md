@@ -77,3 +77,9 @@ spec:
                 defaultMode: 420
 EOF
 ```
+
+Execute the job
+
+```sh
+oc create job --from=cronjob/traffic-export-llm-judge llm-judge-traffic
+```
