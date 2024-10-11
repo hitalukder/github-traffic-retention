@@ -1,0 +1,60 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: traffic-export-superknowa
+spec:
+  schedule: "*/5 * * * *"  # Cron expression to run every 14 days
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: run-job
+            image: 'image-registry.openshift-image-registry.svc:5000/superknowa/traffic-export:1.0.1'
+            command: ["python3", "app.py"]  # Command to execute your Python script
+            env:
+            - name: MONGO_DATABASE_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: traffic-job-secret
+                  key: MONGO_DATABASE_NAME
+            - name: MONGO_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: traffic-job-secret
+                  key: MONGO_PASS
+            - name: MONGO_URL
+              valueFrom:
+                secretKeyRef:
+                  name: traffic-job-secret
+                  key: MONGO_URL
+            - name: MONGO_USER
+              valueFrom:
+                secretKeyRef:
+                  name: traffic-job-secret
+                  key: MONGO_USER
+            - name: TRAFFIC_ACTION_OWNER
+              valueFrom:
+                secretKeyRef:
+                  name: traffic-job-secret
+                  key: TRAFFIC_ACTION_OWNER
+            - name: TRAFFIC_ACTION_REPO
+              valueFrom:
+                secretKeyRef:
+                  name: traffic-job-secret
+                  key: TRAFFIC_ACTION_REPO
+            - name: TRAFFIC_ACTION_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: traffic-job-secret
+                  key: TRAFFIC_ACTION_TOKEN
+          volumeMounts:
+            - name: superknowa-ca-certificate
+              readOnly: true
+              mountPath: /app/backend/cert
+          volumes:
+            - name: superknowa-ca-certificate
+              secret:
+                secretName: superknowa-ca-certificate
+                defaultMode: 420
+          restartPolicy: OnFailure
