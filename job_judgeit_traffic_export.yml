@@ -1,0 +1,41 @@
+oc apply -f - <<EOF
+kind: CronJob
+apiVersion: batch/v1
+metadata:
+  name: traffic-export-llm-judge-repo
+spec:
+  schedule: 0 0 */14 * *
+  concurrencyPolicy: Allow
+  suspend: false
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          serviceAccountName: cronjob-traffic-export-sa
+          containers:
+            - resources: {}
+              terminationMessagePath: /dev/termination-log
+              name: run-job
+              command:
+                - python3
+                - app.py
+              envFrom:
+                - secretRef:
+                  name: traffic_export_judgeit
+              imagePullPolicy: IfNotPresent
+              volumeMounts:
+                - name: mongodb-cert-secret
+                  readOnly: true
+                  mountPath: /app/backend/cert
+              terminationMessagePolicy: File
+              image: image-registry.openshift-image-registry.svc:5000/llm-judge/traffic_retention_judgeit:11102024-v1
+          imagePullSecrets:
+            - name: ibm-cr-secret
+          serviceAccount: cronjob-traffic-export-sa
+          volumes:
+            - name: mongodb-cert-secret
+              secret:
+                secretName: mongodb-cert-secret
+                defaultMode: 420
+EOF
